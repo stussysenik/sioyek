@@ -123,6 +123,42 @@ You can customize all key bindings and some UI elements by editing `keys_user.co
 
 ## Build Instructions
 
+### Zig Rewrite (desktop slice)
+
+There is now a native Zig rewrite entrypoint alongside the existing Qt/C++ application. The current Zig slice is a working desktop PDF viewer core backed by vendored MuPDF and SDL2. It can:
+
+- open a PDF from the command line,
+- render and display pages,
+- navigate pages with the keyboard,
+- fit to window or zoom manually,
+- remember the last opened document path,
+- run a non-UI smoke check with `--check`.
+
+Current keyboard controls in the Zig viewer:
+
+- `Left`, `PageUp`, `k`: previous page
+- `Right`, `PageDown`, `j`, `Space`: next page
+- `Home`, `End`: first or last page
+- `+`, `-`: zoom in or out
+- `0`: reset to fit-to-window
+- `f`: toggle fit-to-window mode
+- digits then `Enter` or `g`: jump to page
+- `q` or `Esc`: quit
+
+Build on macOS with Homebrew SDL2 installed:
+
+```
+brew install sdl2
+zig build -Doptimize=ReleaseFast
+./zig-out/bin/sioyek tutorial.pdf
+```
+
+Non-UI verification:
+
+```
+./zig-out/bin/sioyek --check tutorial.pdf
+```
+
 ### Linux
 
 #### Fedora
