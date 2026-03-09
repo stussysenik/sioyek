@@ -132,7 +132,7 @@ There is now a native Zig rewrite entrypoint alongside the existing Qt/C++ appli
 - navigate pages with the keyboard,
 - fit to window or zoom manually,
 - remember the last opened document path,
-- run a non-UI smoke check with `--check`.
+- run non-UI document checks with `--check`, `--toc`, and `--search`.
 
 Current keyboard controls in the Zig viewer:
 
@@ -157,6 +157,8 @@ Non-UI verification:
 
 ```
 ./zig-out/bin/sioyek --check tutorial.pdf
+./zig-out/bin/sioyek --toc tutorial.pdf
+./zig-out/bin/sioyek --search tutorial.pdf Sioyek
 ```
 
 ### Linux

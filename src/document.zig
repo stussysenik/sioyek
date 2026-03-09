@@ -18,6 +18,19 @@ pub const RenderedPage = struct {
     }
 };
 
+pub const OwnedString = struct {
+    raw: [*c]u8,
+
+    pub fn slice(self: OwnedString) []const u8 {
+        return std.mem.span(self.raw);
+    }
+
+    pub fn deinit(self: *OwnedString) void {
+        c.sioyek_mupdf_free_string(self.raw);
+        self.* = undefined;
+    }
+};
+
 pub const Document = struct {
     raw: *c.SioyekMupdfDocument,
     path: []u8,
@@ -77,6 +90,29 @@ pub const Document = struct {
         if (raw.pixels == null or raw.width <= 0 or raw.height <= 0 or raw.stride <= 0) {
             return error.RenderPageFailed;
         }
+
+        return .{ .raw = raw };
+    }
+
+    pub fn pageText(self: *Document, page_index: usize) !OwnedString {
+        var error_buffer: [512]u8 = [_]u8{0} ** 512;
+        const raw = c.sioyek_mupdf_page_text(
+            self.raw,
+            @intCast(page_index),
+            &error_buffer,
+            error_buffer.len,
+        ) orelse return error.PageTextFailed;
+
+        return .{ .raw = raw };
+    }
+
+    pub fn dumpOutline(self: *Document) !OwnedString {
+        var error_buffer: [512]u8 = [_]u8{0} ** 512;
+        const raw = c.sioyek_mupdf_dump_outline(
+            self.raw,
+            &error_buffer,
+            error_buffer.len,
+        ) orelse return error.OutlineFailed;
 
         return .{ .raw = raw };
     }
