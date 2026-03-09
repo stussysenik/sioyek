@@ -134,6 +134,28 @@ There is now a native Zig rewrite entrypoint alongside the existing Qt/C++ appli
 - remember the last opened document path,
 - run non-UI document checks with `--check`, `--toc`, and `--search`.
 
+Why this rewrite works well in Zig:
+
+- the new path keeps the application logic, build orchestration, and native interop in one language instead of splitting them across Qt project files, C++, and shell scripts,
+- Zig gives direct control over allocation, data ownership, and error handling in the viewer core, which is a better fit for a PDF renderer than a large UI framework-first stack,
+- the runtime dependency surface is smaller for the rewrite path: MuPDF does document parsing and rasterization, SDL2 handles the window and texture presentation, and Zig owns the state machine in between,
+- the build is explicit and reproducible: `build.zig` drives the vendored MuPDF build, links the exact native libraries, and exposes release optimization settings directly,
+- performance work is easier to reason about because the hot path is straightforward: render page with MuPDF, upload pixels once, present texture, and rerender only when page or zoom state changes.
+
+How the Zig path works:
+
+1. `build.zig` builds MuPDF from the vendored submodule and links the Zig executable against MuPDF and SDL2.
+2. `src/c/mupdf_wrapper.c` wraps MuPDF's exception-based C API in a small C shim with simple functions for open, page count, page size, rasterization, text extraction, and outline dumping.
+3. `src/document.zig` owns the Zig-side document API and turns those C calls into Zig-friendly operations.
+4. `src/app.zig` creates the SDL window and renderer, maps keyboard input to viewer actions, asks MuPDF for rendered pages, and uploads the returned pixels into SDL textures.
+5. `src/main.zig` exposes both the interactive desktop viewer and headless commands, so rendering, TOC extraction, and text search all use the same core document path.
+
+Why it is better for this rewrite specifically:
+
+- the Zig version is not trying to preserve Qt internals; it is building a smaller native core that is easier to measure, port subsystem by subsystem, and eventually extend,
+- the MuPDF integration is direct, so the rewrite stays close to the actual PDF engine instead of routing through a large application framework,
+- headless commands such as `--check`, `--toc`, and `--search` make the rewrite testable without needing the full UI stack to be finished first.
+
 Current keyboard controls in the Zig viewer:
 
 - `Left`, `PageUp`, `k`: previous page
