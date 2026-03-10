@@ -23,6 +23,7 @@ void sioyek_mupdf_close_document(SioyekMupdfDocument *document);
 int sioyek_mupdf_page_count(SioyekMupdfDocument *document);
 int sioyek_mupdf_get_page_size(SioyekMupdfDocument *document, int page_index, float *page_width, float *page_height, char *error_message, size_t error_message_len);
 SioyekRenderedPage sioyek_mupdf_render_page(SioyekMupdfDocument *document, int page_index, float scale, char *error_message, size_t error_message_len);
+SioyekRenderedPage sioyek_mupdf_render_svg(const char *svg, size_t svg_len, float scale, char *error_message, size_t error_message_len);
 void sioyek_mupdf_free_rendered_page(SioyekRenderedPage *page);
 char *sioyek_mupdf_page_text(SioyekMupdfDocument *document, int page_index, char *error_message, size_t error_message_len);
 char *sioyek_mupdf_dump_outline(SioyekMupdfDocument *document, char *error_message, size_t error_message_len);

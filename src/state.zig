@@ -7,6 +7,17 @@ pub const SessionState = struct {
     fit_to_window: bool = true,
 };
 
+pub const HudDensity = enum {
+    compact,
+    expanded,
+};
+
+pub const UiPrefs = struct {
+    hud_visible: bool = true,
+    hud_density: HudDensity = .compact,
+    onboarding_acknowledged: bool = false,
+};
+
 pub const BookmarkStore = struct {
     pages: std.ArrayListUnmanaged(usize) = .empty,
 
@@ -141,6 +152,35 @@ pub fn loadBookmarks(allocator: std.mem.Allocator, paths: *const Paths, document
     return store;
 }
 
+pub fn loadUiPrefs(allocator: std.mem.Allocator, paths: *const Paths) !UiPrefs {
+    const file_path = try uiPrefsFilePath(allocator, paths);
+    defer allocator.free(file_path);
+
+    const file = std.fs.openFileAbsolute(file_path, .{}) catch |err| switch (err) {
+        error.FileNotFound => return .{},
+        else => return err,
+    };
+    defer file.close();
+
+    const contents = try file.readToEndAlloc(allocator, 8 * 1024);
+    defer allocator.free(contents);
+
+    return parseUiPrefs(contents);
+}
+
+pub fn saveUiPrefs(allocator: std.mem.Allocator, paths: *const Paths, prefs: UiPrefs) !void {
+    const file_path = try uiPrefsFilePath(allocator, paths);
+    defer allocator.free(file_path);
+
+    const file = try std.fs.createFileAbsolute(file_path, .{ .truncate = true });
+    defer file.close();
+
+    const contents = try formatUiPrefs(allocator, prefs);
+    defer allocator.free(contents);
+
+    try file.writeAll(contents);
+}
+
 pub fn saveBookmarks(allocator: std.mem.Allocator, paths: *const Paths, document_path: []const u8, store: *const BookmarkStore) !void {
     const file_path = try stateFilePath(allocator, paths, document_path, "bookmarks");
     defer allocator.free(file_path);
@@ -165,7 +205,54 @@ fn stateFilePath(allocator: std.mem.Allocator, paths: *const Paths, document_pat
     return try std.fs.path.join(allocator, &.{ paths.rewrite_state_dir, file_name });
 }
 
+fn uiPrefsFilePath(allocator: std.mem.Allocator, paths: *const Paths) ![]u8 {
+    return try std.fs.path.join(allocator, &.{ paths.rewrite_state_dir, "ui_prefs.state" });
+}
+
+fn parseUiPrefs(contents: []const u8) UiPrefs {
+    var prefs = UiPrefs{};
+    var lines = std.mem.tokenizeScalar(u8, contents, '\n');
+    while (lines.next()) |raw_line| {
+        const line = std.mem.trim(u8, raw_line, " \r\t");
+        if (std.mem.startsWith(u8, line, "hud_visible=")) {
+            prefs.hud_visible = std.mem.eql(u8, line["hud_visible=".len..], "1");
+        } else if (std.mem.startsWith(u8, line, "hud_density=")) {
+            prefs.hud_density = if (std.mem.eql(u8, line["hud_density=".len..], "expanded")) .expanded else .compact;
+        } else if (std.mem.startsWith(u8, line, "onboarding_acknowledged=")) {
+            prefs.onboarding_acknowledged = std.mem.eql(u8, line["onboarding_acknowledged=".len..], "1");
+        }
+    }
+    return prefs;
+}
+
+fn formatUiPrefs(allocator: std.mem.Allocator, prefs: UiPrefs) ![]u8 {
+    return std.fmt.allocPrint(
+        allocator,
+        "hud_visible={d}\nhud_density={s}\nonboarding_acknowledged={d}\n",
+        .{
+            if (prefs.hud_visible) @as(u8, 1) else @as(u8, 0),
+            @tagName(prefs.hud_density),
+            if (prefs.onboarding_acknowledged) @as(u8, 1) else @as(u8, 0),
+        },
+    );
+}
+
 fn documentKey(allocator: std.mem.Allocator, document_path: []const u8) ![]u8 {
     const hash = std.hash.Wyhash.hash(0, document_path);
     return std.fmt.allocPrint(allocator, "{x}", .{hash});
+}
+
+test "ui prefs parse and format round trip" {
+    const allocator = std.testing.allocator;
+    const encoded = try formatUiPrefs(allocator, .{
+        .hud_visible = true,
+        .hud_density = .expanded,
+        .onboarding_acknowledged = true,
+    });
+    defer allocator.free(encoded);
+
+    const decoded = parseUiPrefs(encoded);
+    try std.testing.expect(decoded.hud_visible);
+    try std.testing.expectEqual(HudDensity.expanded, decoded.hud_density);
+    try std.testing.expect(decoded.onboarding_acknowledged);
 }

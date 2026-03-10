@@ -280,7 +280,7 @@ SioyekRenderedPage sioyek_mupdf_render_page(SioyekMupdfDocument *document, int p
         page = fz_load_page(document->ctx, document->doc, page_index);
         bounds = fz_bound_page(document->ctx, page);
         transform = fz_scale(scale, scale);
-        pixmap = fz_new_pixmap_from_page(document->ctx, page, transform, fz_device_rgb(document->ctx), 0);
+        pixmap = fz_new_pixmap_from_page(document->ctx, page, transform, fz_device_rgb(document->ctx), 1);
 
         rendered.width = fz_pixmap_width(document->ctx, pixmap);
         rendered.height = fz_pixmap_height(document->ctx, pixmap);
@@ -310,6 +310,78 @@ SioyekRenderedPage sioyek_mupdf_render_page(SioyekMupdfDocument *document, int p
         sioyek_mupdf_free_rendered_page(&rendered);
     }
 
+    return rendered;
+}
+
+SioyekRenderedPage sioyek_mupdf_render_svg(const char *svg, size_t svg_len, float scale, char *error_message, size_t error_message_len) {
+    SioyekRenderedPage rendered = {0};
+    fz_context *ctx = NULL;
+    fz_buffer *buffer = NULL;
+    fz_display_list *list = NULL;
+    fz_pixmap *pixmap = NULL;
+    size_t pixel_bytes = 0;
+    float width = 0.0f;
+    float height = 0.0f;
+
+    clear_error(error_message, error_message_len);
+
+    if (svg == NULL || svg_len == 0) {
+        write_error(error_message, error_message_len, "svg payload is empty");
+        return rendered;
+    }
+
+    if (scale <= 0.0f) {
+        write_error(error_message, error_message_len, "scale must be positive");
+        return rendered;
+    }
+
+    ctx = fz_new_context(NULL, NULL, FZ_STORE_DEFAULT);
+    if (ctx == NULL) {
+        write_error(error_message, error_message_len, "failed to allocate MuPDF context");
+        return rendered;
+    }
+
+    fz_var(buffer);
+    fz_var(list);
+    fz_var(pixmap);
+
+    fz_try(ctx) {
+        buffer = fz_new_buffer_from_copied_data(ctx, (const unsigned char *)svg, svg_len);
+        list = fz_new_display_list_from_svg(ctx, buffer, NULL, NULL, &width, &height);
+        pixmap = fz_new_pixmap_from_display_list(ctx, list, fz_scale(scale, scale), fz_device_rgb(ctx), 1);
+
+        rendered.width = fz_pixmap_width(ctx, pixmap);
+        rendered.height = fz_pixmap_height(ctx, pixmap);
+        rendered.stride = fz_pixmap_stride(ctx, pixmap);
+        rendered.page_width = width;
+        rendered.page_height = height;
+
+        pixel_bytes = (size_t)rendered.stride * (size_t)rendered.height;
+        rendered.pixels = (unsigned char *)malloc(pixel_bytes);
+        if (rendered.pixels == NULL) {
+            write_error(error_message, error_message_len, "failed to allocate svg render buffer");
+            memset(&rendered, 0, sizeof(rendered));
+        } else {
+            memcpy(rendered.pixels, fz_pixmap_samples(ctx, pixmap), pixel_bytes);
+        }
+    }
+    fz_always(ctx) {
+        if (pixmap != NULL) {
+            fz_drop_pixmap(ctx, pixmap);
+        }
+        if (list != NULL) {
+            fz_drop_display_list(ctx, list);
+        }
+        if (buffer != NULL) {
+            fz_drop_buffer(ctx, buffer);
+        }
+    }
+    fz_catch(ctx) {
+        write_error(error_message, error_message_len, fz_caught_message(ctx));
+        sioyek_mupdf_free_rendered_page(&rendered);
+    }
+
+    fz_drop_context(ctx);
     return rendered;
 }
 

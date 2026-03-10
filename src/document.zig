@@ -117,3 +117,19 @@ pub const Document = struct {
         return .{ .raw = raw };
     }
 };
+
+pub fn renderSvg(svg: []const u8, scale: f32) !RenderedPage {
+    var error_buffer: [512]u8 = [_]u8{0} ** 512;
+    const raw = c.sioyek_mupdf_render_svg(
+        svg.ptr,
+        svg.len,
+        scale,
+        &error_buffer,
+        error_buffer.len,
+    );
+    if (raw.pixels == null or raw.width <= 0 or raw.height <= 0 or raw.stride <= 0) {
+        return error.RenderSvgFailed;
+    }
+
+    return .{ .raw = raw };
+}
