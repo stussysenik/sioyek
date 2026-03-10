@@ -397,3 +397,4 @@ tags
 .vscode
 .zig-cache/
 zig-out/
+benchmarks/results/

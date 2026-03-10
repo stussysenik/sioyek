@@ -132,6 +132,10 @@ There is now a native Zig rewrite entrypoint alongside the existing Qt/C++ appli
 - navigate pages with the keyboard,
 - fit to window or zoom manually,
 - remember the last opened document path,
+- persist per-document session state,
+- persist bookmarks in the Zig rewrite path,
+- load and navigate table-of-contents entries in the Zig app,
+- run search workflows from Zig-owned indexing logic,
 - run non-UI document checks with `--check`, `--toc`, and `--search`.
 
 Why this rewrite works well in Zig:
@@ -165,6 +169,11 @@ Current keyboard controls in the Zig viewer:
 - `0`: reset to fit-to-window
 - `f`: toggle fit-to-window mode
 - digits then `Enter` or `g`: jump to page
+- `b`: add or remove bookmark on the current page
+- `[` and `]`: jump to previous or next bookmark
+- `t`: open TOC navigation mode
+- `/`: enter search mode
+- `n` and `p`: move through search hits
 - `q` or `Esc`: quit
 
 Build on macOS with Homebrew SDL2 installed:
@@ -181,6 +190,8 @@ Non-UI verification:
 ./zig-out/bin/sioyek --check tutorial.pdf
 ./zig-out/bin/sioyek --toc tutorial.pdf
 ./zig-out/bin/sioyek --search tutorial.pdf Sioyek
+./zig-out/bin/sioyek --bench tutorial.pdf Sioyek 5
+./benchmarks/run_zig_bench.sh ./zig-out/bin/sioyek tutorial.pdf Sioyek 5
 ```
 
 ### Linux

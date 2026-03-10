@@ -4,10 +4,12 @@ const std = @import("std");
 pub const Paths = struct {
     data_dir: []u8,
     last_document_path: []u8,
+    rewrite_state_dir: []u8,
 
     pub fn deinit(self: *Paths, allocator: std.mem.Allocator) void {
         allocator.free(self.data_dir);
         allocator.free(self.last_document_path);
+        allocator.free(self.rewrite_state_dir);
     }
 };
 
@@ -30,12 +32,23 @@ pub fn initPaths(allocator: std.mem.Allocator) !Paths {
     };
     errdefer allocator.free(data_dir);
 
-    try std.fs.makeDirAbsolute(data_dir);
+    std.fs.makeDirAbsolute(data_dir) catch |err| switch (err) {
+        error.PathAlreadyExists => {},
+        else => return err,
+    };
 
     const last_document_path = try std.fs.path.join(allocator, &.{ data_dir, "last_document_path.txt" });
+    const rewrite_state_dir = try std.fs.path.join(allocator, &.{ data_dir, "zig-rewrite" });
+    errdefer allocator.free(rewrite_state_dir);
+    std.fs.makeDirAbsolute(rewrite_state_dir) catch |err| switch (err) {
+        error.PathAlreadyExists => {},
+        else => return err,
+    };
+
     return .{
         .data_dir = data_dir,
         .last_document_path = last_document_path,
+        .rewrite_state_dir = rewrite_state_dir,
     };
 }
 
