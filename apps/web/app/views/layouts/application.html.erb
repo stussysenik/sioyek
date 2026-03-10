@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= content_for(:title) || "Sioyek Web" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= yield :head %>
+
+    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <%= stylesheet_link_tag :app %>
+  </head>
+
+  <body>
+    <div class="shell">
+      <nav class="nav">
+        <div>
+          <div class="brand">Sioyek Web</div>
+          <div class="trace">Rails sidecar for the Zig reader: accounts, sync, library services, and admin.</div>
+        </div>
+        <div class="nav-links">
+          <% if logged_in? %>
+            <%= link_to "Dashboard", root_path %>
+            <%= link_to "Library", library_entries_path %>
+            <% if current_user.admin? %>
+              <%= link_to "Admin", admin_root_path %>
+            <% end %>
+            <%= button_to "Sign out", logout_path, method: :delete, form: { style: "display:inline-block" } %>
+          <% else %>
+            <%= link_to "Sign in", login_path %>
+          <% end %>
+        </div>
+      </nav>
+
+      <% flash.each do |type, message| %>
+        <div class="flash <%= type %>"><%= message %></div>
+      <% end %>
+
+      <%= yield %>
+    </div>
+  </body>
+</html>

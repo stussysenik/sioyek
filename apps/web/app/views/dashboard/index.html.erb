@@ -1,0 +1,49 @@
+<div class="panel">
+  <h1>Sync overview</h1>
+  <p class="muted">This service wraps the Zig reader with account, device, and sync infrastructure. The desktop app remains the reading runtime.</p>
+</div>
+
+<div class="grid">
+  <div class="panel">
+    <div class="label">Library entries</div>
+    <div class="stat"><%= @library_entries.size %></div>
+  </div>
+  <div class="panel">
+    <div class="label">Devices</div>
+    <div class="stat"><%= @device_count %></div>
+  </div>
+  <div class="panel">
+    <div class="label">Bookmarks</div>
+    <div class="stat"><%= @bookmark_count %></div>
+  </div>
+  <div class="panel">
+    <div class="label">Highlights / Notes</div>
+    <div class="stat"><%= @highlight_count + @note_count %></div>
+  </div>
+</div>
+
+<div class="panel">
+  <h2>Recent library entries</h2>
+  <% if @library_entries.any? %>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Document</th>
+          <th>Fingerprint</th>
+          <th>Updated</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @library_entries.each do |entry| %>
+          <tr>
+            <td><%= link_to entry.display_title, library_entry_path(entry) %></td>
+            <td><code><%= entry.document.fingerprint %></code></td>
+            <td><%= entry.updated_at.strftime("%Y-%m-%d %H:%M") %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% else %>
+    <p class="muted">No library entries yet. Register a document from the Zig client first.</p>
+  <% end %>
+</div>

@@ -1,0 +1,18 @@
+<div class="panel" style="max-width: 520px; margin: 0 auto;">
+  <h1>Sign in</h1>
+  <p class="muted">This signs you into the Rails sidecar for sync and library management. The Zig desktop app uses the JSON API with device tokens.</p>
+
+  <%= form_with url: login_path do |form| %>
+    <div class="form-row">
+      <%= form.label :email %>
+      <%= form.email_field :email, required: true, autofocus: true %>
+    </div>
+
+    <div class="form-row">
+      <%= form.label :password %>
+      <%= form.password_field :password, required: true %>
+    </div>
+
+    <%= form.submit "Sign in" %>
+  <% end %>
+</div>

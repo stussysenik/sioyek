@@ -1,0 +1,27 @@
+<div class="panel">
+  <h1>Documents</h1>
+  <p class="muted">Fingerprint-indexed documents known to the sync service.</p>
+</div>
+
+<div class="panel">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Title</th>
+        <th>Filename</th>
+        <th>Fingerprint</th>
+        <th>Library entries</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @documents.each do |document| %>
+        <tr>
+          <td><%= document.display_title %></td>
+          <td><%= document.filename %></td>
+          <td><code><%= document.fingerprint %></code></td>
+          <td><%= document.library_entries.count %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

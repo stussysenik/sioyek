@@ -1,0 +1,37 @@
+<div class="panel">
+  <h1>Your library</h1>
+  <p class="muted">Documents known to the sync service. The Zig app registers documents by fingerprint, then syncs session state, bookmarks, highlights, and notes against each entry.</p>
+</div>
+
+<div class="panel">
+  <% if @library_entries.any? %>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Document</th>
+          <th>Fingerprint</th>
+          <th>Session</th>
+          <th>Updated</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @library_entries.each do |entry| %>
+          <tr>
+            <td><%= link_to entry.display_title, library_entry_path(entry) %></td>
+            <td><code><%= entry.document.fingerprint %></code></td>
+            <td>
+              <% if (latest = entry.latest_reader_session) %>
+                page <%= latest.current_page %>, zoom <%= latest.zoom %>
+              <% else %>
+                <span class="muted">No synced session yet</span>
+              <% end %>
+            </td>
+            <td><%= entry.updated_at.strftime("%Y-%m-%d %H:%M") %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% else %>
+    <p class="muted">No library entries yet.</p>
+  <% end %>
+</div>

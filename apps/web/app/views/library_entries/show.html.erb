@@ -1,0 +1,63 @@
+<div class="panel">
+  <h1><%= @library_entry.display_title %></h1>
+  <p class="muted">
+    Fingerprint: <code><%= @library_entry.document.fingerprint %></code><br>
+    File: <%= @library_entry.document.filename %>
+  </p>
+</div>
+
+<div class="grid">
+  <div class="panel">
+    <h2>Reader sessions</h2>
+    <% if @reader_sessions.any? %>
+      <ul>
+        <% @reader_sessions.each do |session_record| %>
+          <li><strong><%= session_record.device.name %></strong>: page <%= session_record.current_page %>, zoom <%= session_record.zoom %>, updated <%= session_record.updated_at.strftime("%Y-%m-%d %H:%M") %></li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p class="muted">No synced session data yet.</p>
+    <% end %>
+  </div>
+
+  <div class="panel">
+    <h2>Bookmarks</h2>
+    <% if @bookmarks.any? %>
+      <ul>
+        <% @bookmarks.each do |bookmark| %>
+          <li>Page <%= bookmark.page_index %>: <%= bookmark.label.presence || "(untitled)" %></li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p class="muted">No bookmarks yet.</p>
+    <% end %>
+  </div>
+</div>
+
+<div class="grid">
+  <div class="panel">
+    <h2>Highlights</h2>
+    <% if @highlights.any? %>
+      <ul>
+        <% @highlights.each do |highlight| %>
+          <li>Page <%= highlight.page_index %>: <%= truncate(highlight.quote.to_s, length: 80) %></li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p class="muted">No highlights yet.</p>
+    <% end %>
+  </div>
+
+  <div class="panel">
+    <h2>Notes</h2>
+    <% if @notes.any? %>
+      <ul>
+        <% @notes.each do |note| %>
+          <li>Page <%= note.page_index %>: <%= truncate(note.body.to_s, length: 80) %></li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p class="muted">No notes yet.</p>
+    <% end %>
+  </div>
+</div>

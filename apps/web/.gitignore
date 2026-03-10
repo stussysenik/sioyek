@@ -1,0 +1,7 @@
+/log/*
+/tmp/*
+/storage/*
+/node_modules/
+/.env
+/.env.*
+/config/master.key

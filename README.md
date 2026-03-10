@@ -141,6 +141,15 @@ There is now a native Zig rewrite entrypoint alongside the existing Qt/C++ appli
 - persist HUD density and onboarding acknowledgement across launches,
 - run non-UI document checks with `--check`, `--toc`, and `--search`.
 
+There is also now a Rails sidecar under `apps/web` for the product layer around the reader. That service is for:
+
+- accounts and email/password auth,
+- device registration for Zig clients,
+- fingerprint-based cloud library records,
+- synced reader session state,
+- synced bookmarks, highlights, and notes,
+- lightweight admin and inspection pages.
+
 Why this rewrite works well in Zig:
 
 - the new path keeps the application logic, build orchestration, and native interop in one language instead of splitting them across Qt project files, C++, and shell scripts,
@@ -163,7 +172,8 @@ Why it is better for this rewrite specifically:
 
 - the Zig version is not trying to preserve Qt internals; it is building a smaller native core that is easier to measure, port subsystem by subsystem, and eventually extend,
 - the MuPDF integration is direct, so the rewrite stays close to the actual PDF engine instead of routing through a large application framework,
-- headless commands such as `--check`, `--toc`, and `--search` make the rewrite testable without needing the full UI stack to be finished first.
+- headless commands such as `--check`, `--toc`, and `--search` make the rewrite testable without needing the full UI stack to be finished first,
+- the Rails sidecar keeps cloud/library/product-service concerns out of the reader process so the Zig app stays local-first and fast.
 
 Current keyboard controls in the Zig viewer:
 
@@ -208,6 +218,37 @@ Non-UI verification:
 ./zig-out/bin/sioyek --search tutorial.pdf Sioyek
 ./zig-out/bin/sioyek --bench tutorial.pdf Sioyek 5
 ./benchmarks/run_zig_bench.sh ./zig-out/bin/sioyek tutorial.pdf Sioyek 5
+```
+
+### Rails Sidecar
+
+The fork now includes a Rails app at `apps/web`. It is intentionally a sidecar around the Zig reader, not a replacement for it.
+
+This is an independent Zig-first fork. `origin` is the product repo for that work, and `upstream` is kept only for reference and occasional selective sync. The goal is to keep pushing the reader deeper into Zig while using Rails for the service layer around it.
+
+Local boot:
+
+```bash
+cd apps/web
+bundle install
+bundle exec rails db:prepare
+bundle exec rails db:seed
+bundle exec rails server
+```
+
+The intended split is:
+
+- Zig desktop app: render, commands, offline-first reading, local persistence
+- Rails app: auth, sync, cloud library, admin, product services
+
+There is a short architecture trace for the fork in [`docs/fork-architecture.md`](docs/fork-architecture.md).
+
+Rails verification:
+
+```bash
+cd apps/web
+bundle exec rails test
+bundle exec rails zeitwerk:check
 ```
 
 ### Linux
