@@ -67,6 +67,8 @@ The Zig reader should use the JSON API under `/api/v1` for:
 
 The intended model is offline-first: Zig remains usable without the network, and Rails acts as the optional sync and product-services layer.
 
+The request and response contract is documented in [`../../docs/sync-api.md`](../../docs/sync-api.md).
+
 ## Test suite
 
 ```bash

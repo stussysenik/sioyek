@@ -242,6 +242,7 @@ The intended split is:
 - Rails app: auth, sync, cloud library, admin, product services
 
 There is a short architecture trace for the fork in [`docs/fork-architecture.md`](docs/fork-architecture.md).
+The Zig-to-Rails sync contract is documented in [`docs/sync-api.md`](docs/sync-api.md).
 
 Rails verification:
 
