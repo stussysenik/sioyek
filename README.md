@@ -129,13 +129,16 @@ There is now a native Zig rewrite entrypoint alongside the existing Qt/C++ appli
 
 - open a PDF from the command line,
 - render and display pages,
-- navigate pages with the keyboard,
+- navigate pages with a Zig-owned shortcut system,
 - fit to window or zoom manually,
 - remember the last opened document path,
 - persist per-document session state,
 - persist bookmarks in the Zig rewrite path,
 - load and navigate table-of-contents entries in the Zig app,
 - run search workflows from Zig-owned indexing logic,
+- keep a persistent on-screen HUD that explains where you are and what you can do next,
+- show an expanded shortcut guide on first launch and whenever `?` is pressed,
+- persist HUD density and onboarding acknowledgement across launches,
 - run non-UI document checks with `--check`, `--toc`, and `--search`.
 
 Why this rewrite works well in Zig:
@@ -151,8 +154,10 @@ How the Zig path works:
 1. `build.zig` builds MuPDF from the vendored submodule and links the Zig executable against MuPDF and SDL2.
 2. `src/c/mupdf_wrapper.c` wraps MuPDF's exception-based C API in a small C shim with simple functions for open, page count, page size, rasterization, text extraction, and outline dumping.
 3. `src/document.zig` owns the Zig-side document API and turns those C calls into Zig-friendly operations.
-4. `src/app.zig` creates the SDL window and renderer, maps keyboard input to viewer actions, asks MuPDF for rendered pages, and uploads the returned pixels into SDL textures.
-5. `src/main.zig` exposes both the interactive desktop viewer and headless commands, so rendering, TOC extraction, and text search all use the same core document path.
+4. `src/app.zig` creates the SDL window and renderer, dispatches shortcuts through a Zig-owned command table, asks MuPDF for rendered pages, and uploads the returned pixels into SDL textures.
+5. `src/commands.zig` defines the command registry and beginner-facing shortcut metadata used both for input dispatch and for visible help.
+6. `src/hud.zig` builds the persistent help/status overlay as SVG, and `src/c/mupdf_wrapper.c` renders it through MuPDF so the guidance layer stays in the same native rendering stack.
+7. `src/main.zig` exposes both the interactive desktop viewer and headless commands, so rendering, TOC extraction, text search, and shortcut guidance all use the same core path.
 
 Why it is better for this rewrite specifically:
 
@@ -162,19 +167,30 @@ Why it is better for this rewrite specifically:
 
 Current keyboard controls in the Zig viewer:
 
-- `Left`, `PageUp`, `k`: previous page
-- `Right`, `PageDown`, `j`, `Space`: next page
+- `?`: toggle the full shortcut guide
+- `Space`, `Down`, `Right`, `PageDown`, `j`: next page
+- `Up`, `Left`, `PageUp`, `k`: previous page
 - `Home`, `End`: first or last page
 - `+`, `-`: zoom in or out
 - `0`: reset to fit-to-window
 - `f`: toggle fit-to-window mode
-- digits then `Enter` or `g`: jump to page
+- digits then `Enter`: jump to page
 - `b`: add or remove bookmark on the current page
 - `[` and `]`: jump to previous or next bookmark
 - `t`: open TOC navigation mode
-- `/`: enter search mode
+- `/` or `Ctrl+F`: enter search mode
 - `n` and `p`: move through search hits
-- `q` or `Esc`: quit
+- `Esc`: leave the current mode or collapse expanded help
+- `q`: quit
+
+The Zig viewer now keeps a persistent compact HUD visible by default. It shows:
+
+- the current document and page,
+- the current mode,
+- the last action or state message,
+- the next few useful shortcuts for the current mode.
+
+On first launch the Zig path opens with the expanded shortcut guide instead of a blank unexplained reader surface. After it is acknowledged, future launches keep the compact HUD visible and let `?` reopen the full guide on demand.
 
 Build on macOS with Homebrew SDL2 installed:
 
