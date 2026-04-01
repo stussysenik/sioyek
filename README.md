@@ -1,5 +1,8 @@
 # Sioyek
 
+![Demo](demo.gif)
+
+
 Sioyek is a PDF viewer with a focus on textbooks and research papers.
 
 # Development Branch FAQ
